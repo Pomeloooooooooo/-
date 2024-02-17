@@ -1,0 +1,61 @@
+# 导入基本的工具库
+import jieba
+from wordcloud import WordCloud, ImageColorGenerator
+import matplotlib.pyplot as plt
+from imageio import imread
+from collections import Counter
+import numpy as np
+import re
+# 读入数据文件文件
+content = open('D:\大一下\python\第十一次上机\近三年南方周末新年献词.txt',encoding='utf8').read()
+content[:99]     #显示部分数据内容
+#数据清理
+content = re.sub(r'\n+','',content) #remove \n换行符
+content = re.sub(r' +','',content)  #remove blank空白
+content = re.sub(r'\W+',' ',content) #replace symbols with blank带有空白的字符
+content[:99]      #显示部分文本内容
+#分词
+seg_list = list(jieba.cut(content))
+print("分词结果: \n","/".join(seg_list[:99]))     #显示部分分词结果
+#加载停用词表（高频出现但是意义不大的词）
+stopwords = open('D:\大一下\python\第十一次上机\stopwords.txt',encoding='utf8').read() #长字符串
+stopwords = stopwords.split('\n')       #字符串按'\n'分割，构建列表类型
+print("停用词: \n",",".join(stopwords[:20]))      #显示部分停用词，第一个为空格
+#去停用词
+final_content = []
+for seg in seg_list:
+    if seg not in stopwords:
+        final_content.append(seg)
+print("分词结果: \n","/".join(final_content[:99]))     #显示部分处理结果
+#使用 counter 做词频统计，选取出现频率前 500 的词汇
+counting_words = Counter(final_content)
+print(str(counting_words))
+common_words = counting_words.most_common(500)
+# 读入图片，配置词云背景
+backgroud_pic = imread('D:\大一下\python\第十一次上机\爱心.png')
+# 配置词云参数
+wc = WordCloud(
+    # 设置背景色,我这里设置为了..
+    background_color = 'white',
+    # 设置词云形状，就是之前读入的图片
+    mask = backgroud_pic,
+    # 设置字体,字体路径要正确，不然会报错，最好和py文件放在一块
+    font_path = r'C:\Windows\Fonts\STKAITI.TTF',
+
+    max_words=2000,      # 设置最大现实的字数
+    max_font_size=150,  # 设置字体最大值
+    
+    margin=1,          #设置词间间距
+  
+    random_state=30,   # 设置有多少种随机生成状态，即有多少种配色方案
+    scale = 1        #按照比例进行放大画布
+    )
+wc.generate_from_frequencies(dict(common_words)) # 从字典生成词云
+
+wc.to_file("myWordCloud1.png")
+%matplotlib inline
+wc_pic = imread('myWordCloud1.png')
+plt.figure(figsize=(15,11)) 
+plt.imshow(wc_pic) # 显示词云
+plt.axis('off') # 关闭坐标轴
+plt.show()
